@@ -1,40 +1,39 @@
-name: بناء تطبيق APK
-
+name: Build APK
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: تحميل الملفات
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: إعداد Java
-        uses: actions/setup-java@v4
+      - name: Extract project
+        run: |
+          unzip -o QasimAlHariri_APK_Project_icon_updated.zip
+          
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: إعداد Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v3
 
-      - name: فك ملفات المشروع
+      - name: Install SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install Gradle
         run: |
-          mkdir buildsrc
-          unzip -q QasimAlHariri_APK_Project.zip -d buildsrc
+          wget -q https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+          unzip -q gradle-8.10.2-bin.zip
 
-      - name: بناء APK
+      - name: Build
         run: |
-          cd buildsrc/QasimAlHariri_APK_Project
-          gradle :app:assembleDebug
+          ./gradle-8.10.2/bin/gradle -p QasimAlHariri_APK_Project :app:assembleDebug
 
-      - name: حفظ APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: QasimAlHariri-APK
-          path: buildsrc/QasimAlHariri_APK_Project/app/build/outputs/apk/debug/app-debug.apk
+          name: qasim-alhariri-apk
+          path: QasimAlHariri_APK_Project/app/build/outputs/apk/debug/app-debug.apk
